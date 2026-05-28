@@ -129,12 +129,17 @@ output/{doc_name}/
 
 ## 依赖
 
+```bash
+conda activate newmineru
+pip install -r requirements.txt
 ```
-mineru
-pypdf
-reportlab
-pdf2image
-Pillow
-loguru
-requests
-```
+
+| 包 | 版本 | 用途 |
+|---|---|---|
+| mineru | 3.1.15 | 文档解析引擎 |
+| pdf2image | 1.17.0 | PDF 转图像 |
+| pillow | 12.2.0 | 图像处理/标注 |
+| pypdf | 6.12.1 | PDF 读写 |
+| reportlab | 4.5.1 | PDF 画框叠加 |
+| loguru | 0.7.3 | 日志 |
+| requests | 2.34.2 | VLM API 调用 |
