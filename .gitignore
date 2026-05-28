@@ -1,0 +1,24 @@
+# 环境变量 (含 API Key)
+.env
+.claude
+.codex
+.agents
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# 调试输出
+debug_vlm_annotated/
+debug_cross_page/
+confirmed_images/
+images/
+pages/
+
+# 运行产物
+*.pdf
+!requirements*.txt
+
+# 数据文档
+rag/广州院制度文件
