@@ -20,5 +20,8 @@ pages/
 *.pdf
 !requirements*.txt
 
+# 服务任务数据
+tasks_root/
+
 # 数据文档
 rag/广州院制度文件
