@@ -7,6 +7,17 @@
   2. 轮询任务直至完成
   3. 按文件结构把全套解析结果保存到指定目录
 
+保存结构（{stem} = 上传文件名，不含扩展名）:
+  <--output>/<stem>/auto/<stem>_layout.json   最终布局 JSON
+                      <stem>_confirmed.md     最终 Markdown
+                      <stem>_confirmed.pdf    最终 PDF
+                      <stem>_middle.json      MinerU 中间结果
+                      <stem>.md               MinerU 原始 Markdown
+                      <stem>.pdf              原始 PDF 副本
+                      images/xxx.jpg          切分图片
+                      ...
+  即: 所有产物（含最终成品）统一收进 <stem>/auto/ 下逐层存放。
+
 用法:
   # 默认连接服务 http://10.154.24.43:8000（外部调用方直接使用本 IP）
   python client.py /path/to/doc.pdf --output /save/dir
@@ -59,17 +70,46 @@ def wait(url: str, task_id: str, timeout: int) -> dict:
     raise TimeoutError(f"任务 {task_id} 在 {timeout}s 内未完成")
 
 
+def _rebase_rel(rel: str, stem: str) -> str:
+    """把服务端相对路径重排为 {stem}/auto/xxx 结构。
+
+    服务端 path 形如:
+      output/{stem}_layout.json         → {stem}/auto/{stem}_layout.json
+      output/{stem}/{stem}.pdf          → {stem}/auto/{stem}.pdf
+      output/{stem}/auto/{stem}.md      → {stem}/auto/{stem}.md   (保持)
+      output/{stem}/auto/images/x.jpg   → {stem}/auto/images/x.jpg (保持)
+    即: 去掉 output/ 前缀，最终产物也统一收进 {stem}/auto/ 下。
+    """
+    rel = rel.replace("\\", "/")
+    if rel.startswith("output/"):
+        rel = rel[len("output/"):]
+    prefix = f"{stem}/auto/"
+    if rel.startswith(prefix):
+        return rel
+    if rel.startswith(f"{stem}/"):
+        return prefix + rel[len(f"{stem}/"):]
+    return prefix + rel
+
+
 def save_result(url: str, task_id: str, save_dir: Path) -> list[Path]:
-    """按文件结构把全套解析结果保存到 save_dir，返回保存的文件列表。"""
+    """按文件结构把全套解析结果保存到 save_dir，返回保存的文件列表。
+
+    保存结构: {stem}/auto/ 下逐层存放（含最终产物 layout.json / md / pdf）。
+    """
     resp = requests.get(
         f"{url}/api/v1/tasks/{task_id}/result", params={"include_content": "true"}, timeout=60
     )
     resp.raise_for_status()
     data = resp.json()
 
+    files = data.get("files", [])
+    stem = (data.get("summary") or {}).get("file_stem") or (
+        files[0]["path"].split("/")[-1].rsplit(".", 1)[0] if files else "result"
+    )
+
     saved = []
-    for f in data.get("files", []):
-        rel = f["path"]
+    for f in files:
+        rel = _rebase_rel(f["path"], stem)
         # 防目录穿越：清理路径分隔符与 ../
         safe_parts = [p for p in rel.replace("\\", "/").split("/") if p and p not in (".", "..")]
         dest = save_dir.joinpath(*safe_parts)
