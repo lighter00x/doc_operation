@@ -8,9 +8,11 @@
   3. 按文件结构把全套解析结果保存到指定目录
 
 用法:
+  # 默认连接服务 http://10.154.24.43:8000（外部调用方直接使用本 IP）
   python client.py /path/to/doc.pdf --output /save/dir
   python client.py /path/to/doc.pdf --output /save/dir --name renamed.pdf --no-vlm
-  python client.py /path/to/doc.pdf --output /save/dir --by-path   # 服务端可见路径，直接传路径
+  python client.py /path/to/doc.pdf --by-path   # 服务端可见路径，直接传路径
+  # 其他地址/端口用 --url 覆盖
   python client.py /path/to/doc.pdf --url http://127.0.0.1:8000
 """
 
@@ -21,6 +23,9 @@ import time
 from pathlib import Path
 
 import requests
+
+# 服务默认地址：本机内网 IP（服务绑定 0.0.0.0:8000，外部机器经此访问）
+DEFAULT_URL = "http://10.154.24.43:8000"
 
 
 def submit(url: str, file_path: str, name: str, params: dict, by_path: bool) -> str:
@@ -89,7 +94,7 @@ def main():
     parser = argparse.ArgumentParser(description="文档解析流水线服务客户端")
     parser.add_argument("file", help="本地文档路径 (.doc / .pdf)")
     parser.add_argument("-o", "--output", default="./parsed_output", help="结果保存目录 (默认 ./parsed_output)")
-    parser.add_argument("--url", default="http://127.0.0.1:8000", help="服务地址 (默认 http://127.0.0.1:8000)")
+    parser.add_argument("--url", default=DEFAULT_URL, help=f"服务地址 (默认 {DEFAULT_URL})")
     parser.add_argument("--name", default=None, help="上传时使用的文件名 (默认取源文件 basename)")
     parser.add_argument("--by-path", action="store_true", help="传本地路径模式（服务端须可访问该路径），默认 multipart 上传")
     parser.add_argument("--no-vlm", action="store_true", help="禁用 VLM 页内合并")

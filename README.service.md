@@ -131,6 +131,17 @@ HOST=127.0.0.1 PORT=9000 GPU=0 bash start.sh   # 覆盖地址/端口/GPU
 - `GET /healthz` — 健康检查
 - `GET /metrics` — Prometheus 指标（`ENABLE_METRICS=false` 关闭）
 
+## 外部访问
+
+服务监听 `0.0.0.0:8000`，同一局域网内的其他机器通过服务器内网 IP 访问：
+
+```bash
+BASE=http://10.154.24.43:8000
+curl $BASE/healthz
+```
+
+（客户端 `client.py` 默认就连接 `http://10.154.24.43:8000`，无需再指定 `--url`。）
+
 ## 一键客户端（client.py）
 
 ```bash
@@ -138,6 +149,7 @@ python client.py /path/to/doc.pdf --output /save/dir        # 上传 + 按文件
 python client.py /path/to/doc.pdf --name renamed.pdf        # 上传时指定文件名
 python client.py /path/to/doc.pdf --by-path                 # 服务端可见路径，直接传路径
 python client.py /path/to/doc.pdf --no-vlm --no-cross-page  # 关 VLM 快速验证
+python client.py /path/to/doc.pdf --url http://127.0.0.1:8000   # 覆盖默认地址
 ```
 
 上传时显式携带文件名（`--name`，默认取源文件 basename），解析完成后按文件结构把全套结果（layout/middle JSON、Markdown、PDF、图片）保存到 `--output` 目录。
